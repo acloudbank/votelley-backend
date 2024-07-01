@@ -11,6 +11,7 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
+#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -18,6 +19,7 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -47,10 +49,10 @@ class Vote
         static const std::string _vote;
     };
 
-    const static int primaryKeyNumber;
-    const static std::string tableName;
-    const static bool hasPrimaryKey;
-    const static std::string primaryKeyName;
+    static const int primaryKeyNumber;
+    static const std::string tableName;
+    static const bool hasPrimaryKey;
+    static const std::string primaryKeyName;
     using PrimaryKeyType = void;
     int getPrimaryKey() const { assert(false); return 0; }
 
@@ -114,14 +116,12 @@ class Vote
 
     /**  For column vote  */
     ///Get the value of the column vote, returns the default value if the column is null
-    const std::vector<char> &getValueOfVote() const noexcept;
-    ///Return the column value by std::string with binary data
-    std::string getValueOfVoteAsString() const noexcept;
+    const std::string &getValueOfVote() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::vector<char>> &getVote() const noexcept;
+    const std::shared_ptr<std::string> &getVote() const noexcept;
     ///Set the value of the column vote
-    void setVote(const std::vector<char> &pVote) noexcept;
     void setVote(const std::string &pVote) noexcept;
+    void setVote(std::string &&pVote) noexcept;
     void setVoteToNull() noexcept;
 
 
@@ -133,6 +133,10 @@ class Vote
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Vote>;
+    friend drogon::orm::BaseBuilder<Vote, true, true>;
+    friend drogon::orm::BaseBuilder<Vote, true, false>;
+    friend drogon::orm::BaseBuilder<Vote, false, true>;
+    friend drogon::orm::BaseBuilder<Vote, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Vote>;
 #endif
@@ -144,7 +148,7 @@ class Vote
     void updateId(const uint64_t id);
     std::shared_ptr<int32_t> userId_;
     std::shared_ptr<int32_t> pollId_;
-    std::shared_ptr<std::vector<char>> vote_;
+    std::shared_ptr<std::string> vote_;
     struct MetaData
     {
         const std::string colName_;
@@ -202,17 +206,17 @@ class Vote
         size_t n=0;
         if(dirtyFlag_[0])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[1])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)

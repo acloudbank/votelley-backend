@@ -11,6 +11,7 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
+#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -18,6 +19,7 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -45,15 +47,16 @@ class Poll
         static const std::string _id;
         static const std::string _title;
         static const std::string _secretkey;
+        static const std::string _vote;
         static const std::string _votes;
         static const std::string _lasts_until;
         static const std::string _lasts_from;
     };
 
-    const static int primaryKeyNumber;
-    const static std::string tableName;
-    const static bool hasPrimaryKey;
-    const static std::string primaryKeyName;
+    static const int primaryKeyNumber;
+    static const std::string tableName;
+    static const bool hasPrimaryKey;
+    static const std::string primaryKeyName;
     using PrimaryKeyType = int32_t;
     const PrimaryKeyType &getPrimaryKey() const;
 
@@ -72,6 +75,8 @@ class Poll
      * @param pJson The json object to construct a new instance.
      */
     explicit Poll(const Json::Value &pJson) noexcept(false);
+
+     std::string getValueOfVotesAsString() const noexcept;
 
     /**
      * @brief constructor
@@ -119,26 +124,32 @@ class Poll
 
     /**  For column secretkey  */
     ///Get the value of the column secretkey, returns the default value if the column is null
-    const std::vector<char> &getValueOfSecretkey() const noexcept;
-    ///Return the column value by std::string with binary data
-    std::string getValueOfSecretkeyAsString() const noexcept;
+    const std::string &getValueOfSecretkey() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::vector<char>> &getSecretkey() const noexcept;
+    const std::shared_ptr<std::string> &getSecretkey() const noexcept;
     ///Set the value of the column secretkey
-    void setSecretkey(const std::vector<char> &pSecretkey) noexcept;
     void setSecretkey(const std::string &pSecretkey) noexcept;
+    void setSecretkey(std::string &&pSecretkey) noexcept;
     void setSecretkeyToNull() noexcept;
+
+    /**  For column vote  */
+    ///Get the value of the column vote, returns the default value if the column is null
+    const std::string &getValueOfVote() const noexcept;
+    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
+    const std::shared_ptr<std::string> &getVote() const noexcept;
+    ///Set the value of the column vote
+    void setVote(const std::string &pVote) noexcept;
+    void setVote(std::string &&pVote) noexcept;
+    void setVoteToNull() noexcept;
 
     /**  For column votes  */
     ///Get the value of the column votes, returns the default value if the column is null
-    const std::vector<char> &getValueOfVotes() const noexcept;
-    ///Return the column value by std::string with binary data
-    std::string getValueOfVotesAsString() const noexcept;
+    const std::string &getValueOfVotes() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::vector<char>> &getVotes() const noexcept;
+    const std::shared_ptr<std::string> &getVotes() const noexcept;
     ///Set the value of the column votes
-    void setVotes(const std::vector<char> &pVotes) noexcept;
     void setVotes(const std::string &pVotes) noexcept;
+    void setVotes(std::string &&pVotes) noexcept;
     void setVotesToNull() noexcept;
 
     /**  For column lasts_until  */
@@ -149,7 +160,8 @@ class Poll
     ///Set the value of the column lasts_until
     void setLastsUntil(const ::trantor::Date &pLastsUntil) noexcept;
     void setLastsUntilToNull() noexcept;
-
+    
+     std::string getValueOfSecretkeyAsString() const noexcept;
     /**  For column lasts_from  */
     ///Get the value of the column lasts_from, returns the default value if the column is null
     const ::trantor::Date &getValueOfLastsFrom() const noexcept;
@@ -160,7 +172,7 @@ class Poll
     void setLastsFromToNull() noexcept;
 
 
-    static size_t getColumnNumber() noexcept {  return 6;  }
+    static size_t getColumnNumber() noexcept {  return 7;  }
     static const std::string &getColumnName(size_t index) noexcept(false);
 
     Json::Value toJson() const;
@@ -168,6 +180,10 @@ class Poll
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Poll>;
+    friend drogon::orm::BaseBuilder<Poll, true, true>;
+    friend drogon::orm::BaseBuilder<Poll, true, false>;
+    friend drogon::orm::BaseBuilder<Poll, false, true>;
+    friend drogon::orm::BaseBuilder<Poll, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Poll>;
 #endif
@@ -179,8 +195,9 @@ class Poll
     void updateId(const uint64_t id);
     std::shared_ptr<int32_t> id_;
     std::shared_ptr<std::string> title_;
-    std::shared_ptr<std::vector<char>> secretkey_;
-    std::shared_ptr<std::vector<char>> votes_;
+    std::shared_ptr<std::string> secretkey_;
+    std::shared_ptr<std::string> vote_;
+    std::shared_ptr<std::string> votes_;
     std::shared_ptr<::trantor::Date> lastsUntil_;
     std::shared_ptr<::trantor::Date> lastsFrom_;
     struct MetaData
@@ -194,7 +211,7 @@ class Poll
         const bool notNull_;
     };
     static const std::vector<MetaData> metaData_;
-    bool dirtyFlag_[6]={ false };
+    bool dirtyFlag_[7]={ false };
   public:
     static const std::string &sqlForFindingByPrimaryKey()
     {
@@ -212,8 +229,11 @@ class Poll
         std::string sql="insert into " + tableName + " (";
         size_t parametersCount = 0;
         needSelection = false;
+        if(dirtyFlag_[0])
+        {
             sql += "id,";
             ++parametersCount;
+        }
         if(dirtyFlag_[1])
         {
             sql += "title,";
@@ -226,20 +246,24 @@ class Poll
         }
         if(dirtyFlag_[3])
         {
-            sql += "votes,";
+            sql += "vote,";
             ++parametersCount;
         }
         if(dirtyFlag_[4])
         {
-            sql += "lasts_until,";
+            sql += "votes,";
             ++parametersCount;
         }
         if(dirtyFlag_[5])
         {
+            sql += "lasts_until,";
+            ++parametersCount;
+        }
+        if(dirtyFlag_[6])
+        {
             sql += "lasts_from,";
             ++parametersCount;
         }
-        needSelection=true;
         if(parametersCount > 0)
         {
             sql[sql.length()-1]=')';
@@ -251,30 +275,39 @@ class Poll
         int placeholder=1;
         char placeholderStr[64];
         size_t n=0;
-        sql +="default,";
+        if(dirtyFlag_[0])
+        {
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            sql.append(placeholderStr, n);
+        }
         if(dirtyFlag_[1])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[3])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[4])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[5])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            sql.append(placeholderStr, n);
+        }
+        if(dirtyFlag_[6])
+        {
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)

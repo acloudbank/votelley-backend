@@ -21,6 +21,60 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(${PROJECT_NAME} main.cc)
 
+# ##############################################################################
+# If you include the drogon source code locally in your project, use this method
+# to add drogon 
+# add_subdirectory(drogon) 
+# target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
+#
+# and comment out the following lines
+find_package(Drogon CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
+find_package(SEAL 4.1.1 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SEAL::seal)
+find_package(Boost 1.85.0 REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
+
+# import pkg-config
+find_package(PkgConfig QUIET)
+if (PKG_CONFIG_FOUND)
+    pkg_check_modules(sodium_PKG QUIET libsodium)
+endif()
+
+if(sodium_USE_STATIC_LIBS)
+        foreach(_libname ${sodium_PKG_STATIC_LIBRARIES})
+            if (NOT _libname MATCHES "^lib.*\\.a$") # ignore strings already ending with .a
+                list(INSERT sodium_PKG_STATIC_LIBRARIES 0 "lib${_libname}.a")
+            endif()
+        endforeach()
+        list(REMOVE_DUPLICATES sodium_PKG_STATIC_LIBRARIES)
+
+        # if pkgconfig for libsodium doesn't provide
+        # static lib info, then override PKG_STATIC here..
+        if (NOT sodium_PKG_STATIC_FOUND)
+            set(sodium_PKG_STATIC_LIBRARIES libsodium.a)
+        endif()
+
+        set(XPREFIX sodium_PKG_STATIC)
+    else()
+        if (NOT sodium_PKG_FOUND)
+            set(sodium_PKG_LIBRARIES sodium)
+        endif()
+
+        set(XPREFIX sodium_PKG)
+    endif()
+
+    find_path(sodium_INCLUDE_DIR sodium.h
+        HINTS ${${XPREFIX}_INCLUDE_DIRS}
+    )
+    find_library(sodium_LIBRARY_DEBUG NAMES ${${XPREFIX}_LIBRARIES}
+        HINTS ${${XPREFIX}_LIBRARY_DIRS}
+    )
+    find_library(sodium_LIBRARY_RELEASE NAMES ${${XPREFIX}_LIBRARIES}
+        HINTS ${${XPREFIX}_LIBRARY_DIRS}
+    )
+
+
 
 # ##############################################################################
 

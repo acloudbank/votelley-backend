@@ -23,7 +23,7 @@ const std::string Vote::tableName = "vote";
 const std::vector<typename Vote::MetaData> Vote::metaData_={
 {"user_id","int32_t","integer",4,0,0,1},
 {"poll_id","int32_t","integer",4,0,0,1},
-{"vote","std::vector<char>","bytea",0,0,0,0}
+{"vote","std::string","character varying",0,0,0,0}
 };
 const std::string &Vote::getColumnName(size_t index) noexcept(false)
 {
@@ -44,12 +44,7 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         }
         if(!r["vote"].isNull())
         {
-            auto str = r["vote"].as<string_view>();
-            if(str.length()>=2&&
-                str[0]=='\\'&&str[1]=='x')
-            {
-                vote_=std::make_shared<std::vector<char>>(drogon::utils::hexToBinaryVector(str.data()+2,str.length()-2));
-            }
+            vote_=std::make_shared<std::string>(r["vote"].as<std::string>());
         }
     }
     else
@@ -74,12 +69,7 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 2;
         if(!r[index].isNull())
         {
-            auto str = r[index].as<string_view>();
-            if(str.length()>=2&&
-                str[0]=='\\'&&str[1]=='x')
-            {
-                vote_=std::make_shared<std::vector<char>>(drogon::utils::hexToBinaryVector(str.data()+2,str.length()-2));
-            }
+            vote_=std::make_shared<std::string>(r[index].as<std::string>());
         }
     }
 
@@ -113,8 +103,7 @@ Vote::Vote(const Json::Value &pJson, const std::vector<std::string> &pMasqueradi
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            auto str = pJson[pMasqueradingVector[2]].asString();
-            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
+            vote_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
         }
     }
 }
@@ -142,8 +131,7 @@ Vote::Vote(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[2]=true;
         if(!pJson["vote"].isNull())
         {
-            auto str = pJson["vote"].asString();
-            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
+            vote_=std::make_shared<std::string>(pJson["vote"].asString());
         }
     }
 }
@@ -177,8 +165,7 @@ void Vote::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            auto str = pJson[pMasqueradingVector[2]].asString();
-            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
+            vote_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
         }
     }
 }
@@ -206,15 +193,14 @@ void Vote::updateByJson(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[2] = true;
         if(!pJson["vote"].isNull())
         {
-            auto str = pJson["vote"].asString();
-            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
+            vote_=std::make_shared<std::string>(pJson["vote"].asString());
         }
     }
 }
 
 const int32_t &Vote::getValueOfUserId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(userId_)
         return *userId_;
     return defaultValue;
@@ -231,7 +217,7 @@ void Vote::setUserId(const int32_t &pUserId) noexcept
 
 const int32_t &Vote::getValueOfPollId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(pollId_)
         return *pollId_;
     return defaultValue;
@@ -246,32 +232,25 @@ void Vote::setPollId(const int32_t &pPollId) noexcept
     dirtyFlag_[1] = true;
 }
 
-const std::vector<char> &Vote::getValueOfVote() const noexcept
+const std::string &Vote::getValueOfVote() const noexcept
 {
-    const static std::vector<char> defaultValue = std::vector<char>();
+    static const std::string defaultValue = std::string();
     if(vote_)
         return *vote_;
     return defaultValue;
 }
-std::string Vote::getValueOfVoteAsString() const noexcept
-{
-    const static std::string defaultValue = std::string();
-    if(vote_)
-        return std::string(vote_->data(),vote_->size());
-    return defaultValue;
-}
-const std::shared_ptr<std::vector<char>> &Vote::getVote() const noexcept
+const std::shared_ptr<std::string> &Vote::getVote() const noexcept
 {
     return vote_;
 }
-void Vote::setVote(const std::vector<char> &pVote) noexcept
-{
-    vote_ = std::make_shared<std::vector<char>>(pVote);
-    dirtyFlag_[2] = true;
-}
 void Vote::setVote(const std::string &pVote) noexcept
 {
-    vote_ = std::make_shared<std::vector<char>>(pVote.c_str(),pVote.c_str()+pVote.length());
+    vote_ = std::make_shared<std::string>(pVote);
+    dirtyFlag_[2] = true;
+}
+void Vote::setVote(std::string &&pVote) noexcept
+{
+    vote_ = std::make_shared<std::string>(std::move(pVote));
     dirtyFlag_[2] = true;
 }
 void Vote::setVoteToNull() noexcept
@@ -406,7 +385,7 @@ Json::Value Vote::toJson() const
     }
     if(getVote())
     {
-        ret["vote"]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
+        ret["vote"]=getValueOfVote();
     }
     else
     {
@@ -447,7 +426,7 @@ Json::Value Vote::toMasqueradedJson(
         {
             if(getVote())
             {
-                ret[pMasqueradingVector[2]]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
+                ret[pMasqueradingVector[2]]=getValueOfVote();
             }
             else
             {
@@ -475,7 +454,7 @@ Json::Value Vote::toMasqueradedJson(
     }
     if(getVote())
     {
-        ret["vote"]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
+        ret["vote"]=getValueOfVote();
     }
     else
     {

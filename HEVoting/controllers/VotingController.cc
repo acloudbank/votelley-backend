@@ -280,8 +280,10 @@ namespace heVote {
 				seal::Decryptor decryptor(*(this->context), secretkey);
 
 				std::stringstream().swap(strstream);
-				std::string pollVotes = poll.getValueOfVotesAsString();
-				
+				//std::string pollVotes = poll.getValueOfVotesAsString();
+
+				std::string pollVotes = poll.getValueOfSecretkeyAsString();
+
 				seal::Ciphertext ciphertextVotes;
 				strstream<<pollVotes;
 				ciphertextVotes.load(*(this->context), strstream);

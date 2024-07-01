@@ -21,9 +21,9 @@ const bool Users::hasPrimaryKey = true;
 const std::string Users::tableName = "users";
 
 const std::vector<typename Users::MetaData> Users::metaData_={
-{"id","int32_t","integer",4,1,1,1},
-{"username","std::string","character varying",32,0,0,1},
-{"pass","std::string","text",0,0,0,1}
+{"id","int32_t","integer",4,0,1,1},
+{"username","std::string","character varying",70,0,0,0},
+{"pass","std::string","character varying",70,0,0,0}
 };
 const std::string &Users::getColumnName(size_t index) noexcept(false)
 {
@@ -198,7 +198,7 @@ void Users::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Users::getValueOfId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename Users::PrimaryKeyType & Users::getPrimaryKey() const
 
 const std::string &Users::getValueOfUsername() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(username_)
         return *username_;
     return defaultValue;
@@ -239,10 +239,15 @@ void Users::setUsername(std::string &&pUsername) noexcept
     username_ = std::make_shared<std::string>(std::move(pUsername));
     dirtyFlag_[1] = true;
 }
+void Users::setUsernameToNull() noexcept
+{
+    username_.reset();
+    dirtyFlag_[1] = true;
+}
 
 const std::string &Users::getValueOfPass() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(pass_)
         return *pass_;
     return defaultValue;
@@ -261,6 +266,11 @@ void Users::setPass(std::string &&pPass) noexcept
     pass_ = std::make_shared<std::string>(std::move(pPass));
     dirtyFlag_[2] = true;
 }
+void Users::setPassToNull() noexcept
+{
+    pass_.reset();
+    dirtyFlag_[2] = true;
+}
 
 void Users::updateId(const uint64_t id)
 {
@@ -269,6 +279,7 @@ void Users::updateId(const uint64_t id)
 const std::vector<std::string> &Users::insertColumns() noexcept
 {
     static const std::vector<std::string> inCols={
+        "id",
         "username",
         "pass"
     };
@@ -277,6 +288,17 @@ const std::vector<std::string> &Users::insertColumns() noexcept
 
 void Users::outputArgs(drogon::orm::internal::SqlBinder &binder) const
 {
+    if(dirtyFlag_[0])
+    {
+        if(getId())
+        {
+            binder << getValueOfId();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
     if(dirtyFlag_[1])
     {
         if(getUsername())
@@ -304,6 +326,10 @@ void Users::outputArgs(drogon::orm::internal::SqlBinder &binder) const
 const std::vector<std::string> Users::updateColumns() const
 {
     std::vector<std::string> ret;
+    if(dirtyFlag_[0])
+    {
+        ret.push_back(getColumnName(0));
+    }
     if(dirtyFlag_[1])
     {
         ret.push_back(getColumnName(1));
@@ -317,6 +343,17 @@ const std::vector<std::string> Users::updateColumns() const
 
 void Users::updateArgs(drogon::orm::internal::SqlBinder &binder) const
 {
+    if(dirtyFlag_[0])
+    {
+        if(getId())
+        {
+            binder << getValueOfId();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
     if(dirtyFlag_[1])
     {
         if(getUsername())
@@ -446,25 +483,20 @@ bool Users::validateJsonForCreation(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(0, "id", pJson["id"], err, true))
             return false;
     }
+    else
+    {
+        err="The id column cannot be null";
+        return false;
+    }
     if(pJson.isMember("username"))
     {
         if(!validJsonOfField(1, "username", pJson["username"], err, true))
             return false;
     }
-    else
-    {
-        err="The username column cannot be null";
-        return false;
-    }
     if(pJson.isMember("pass"))
     {
         if(!validJsonOfField(2, "pass", pJson["pass"], err, true))
             return false;
-    }
-    else
-    {
-        err="The pass column cannot be null";
-        return false;
     }
     return true;
 }
@@ -485,6 +517,11 @@ bool Users::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(0, pMasqueradingVector[0], pJson[pMasqueradingVector[0]], err, true))
                   return false;
           }
+        else
+        {
+            err="The " + pMasqueradingVector[0] + " column cannot be null";
+            return false;
+        }
       }
       if(!pMasqueradingVector[1].empty())
       {
@@ -493,11 +530,6 @@ bool Users::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(1, pMasqueradingVector[1], pJson[pMasqueradingVector[1]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[1] + " column cannot be null";
-            return false;
-        }
       }
       if(!pMasqueradingVector[2].empty())
       {
@@ -506,11 +538,6 @@ bool Users::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(2, pMasqueradingVector[2], pJson[pMasqueradingVector[2]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[2] + " column cannot be null";
-            return false;
-        }
       }
     }
     catch(const Json::LogicError &e)
@@ -596,11 +623,6 @@ bool Users::validJsonOfField(size_t index,
                 err="The " + fieldName + " column cannot be null";
                 return false;
             }
-            if(isForCreation)
-            {
-                err="The automatic primary key cannot be set";
-                return false;
-            }
             if(!pJson.isInt())
             {
                 err="Type error in the "+fieldName+" field";
@@ -610,20 +632,18 @@ bool Users::validJsonOfField(size_t index,
         case 1:
             if(pJson.isNull())
             {
-                err="The " + fieldName + " column cannot be null";
-                return false;
+                return true;
             }
             if(!pJson.isString())
             {
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 32)
+            if(pJson.isString() && std::strlen(pJson.asCString()) > 70)
             {
                 err="String length exceeds limit for the " +
                     fieldName +
-                    " field (the maximum value is 32)";
+                    " field (the maximum value is 70)";
                 return false;
             }
 
@@ -631,14 +651,21 @@ bool Users::validJsonOfField(size_t index,
         case 2:
             if(pJson.isNull())
             {
-                err="The " + fieldName + " column cannot be null";
-                return false;
+                return true;
             }
             if(!pJson.isString())
             {
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
+            if(pJson.isString() && std::strlen(pJson.asCString()) > 70)
+            {
+                err="String length exceeds limit for the " +
+                    fieldName +
+                    " field (the maximum value is 70)";
+                return false;
+            }
+
             break;
         default:
             err="Internal error in the server";

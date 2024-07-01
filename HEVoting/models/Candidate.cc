@@ -13,6 +13,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace drogon_model::votingregister;
 
+const std::string Candidate::Cols::_id = "id";
 const std::string Candidate::Cols::_poll = "poll";
 const std::string Candidate::Cols::_name = "name";
 const std::string Candidate::Cols::_ord = "ord";
@@ -21,9 +22,10 @@ const bool Candidate::hasPrimaryKey = false;
 const std::string Candidate::tableName = "candidate";
 
 const std::vector<typename Candidate::MetaData> Candidate::metaData_={
-{"poll","int32_t","integer",4,0,0,1},
-{"name","std::string","text",0,0,0,1},
-{"ord","int32_t","integer",4,0,0,0}
+{"id","int32_t","integer",4,0,0,1},
+{"poll","std::string","text",0,0,0,0},
+{"name","std::string","text",0,0,0,0},
+{"ord","std::string","text",0,0,0,0}
 };
 const std::string &Candidate::getColumnName(size_t index) noexcept(false)
 {
@@ -34,9 +36,13 @@ Candidate::Candidate(const Row &r, const ssize_t indexOffset) noexcept
 {
     if(indexOffset < 0)
     {
+        if(!r["id"].isNull())
+        {
+            id_=std::make_shared<int32_t>(r["id"].as<int32_t>());
+        }
         if(!r["poll"].isNull())
         {
-            poll_=std::make_shared<int32_t>(r["poll"].as<int32_t>());
+            poll_=std::make_shared<std::string>(r["poll"].as<std::string>());
         }
         if(!r["name"].isNull())
         {
@@ -44,13 +50,13 @@ Candidate::Candidate(const Row &r, const ssize_t indexOffset) noexcept
         }
         if(!r["ord"].isNull())
         {
-            ord_=std::make_shared<int32_t>(r["ord"].as<int32_t>());
+            ord_=std::make_shared<std::string>(r["ord"].as<std::string>());
         }
     }
     else
     {
         size_t offset = (size_t)indexOffset;
-        if(offset + 3 > r.size())
+        if(offset + 4 > r.size())
         {
             LOG_FATAL << "Invalid SQL result for this model";
             return;
@@ -59,17 +65,22 @@ Candidate::Candidate(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 0;
         if(!r[index].isNull())
         {
-            poll_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            id_=std::make_shared<int32_t>(r[index].as<int32_t>());
         }
         index = offset + 1;
         if(!r[index].isNull())
         {
-            name_=std::make_shared<std::string>(r[index].as<std::string>());
+            poll_=std::make_shared<std::string>(r[index].as<std::string>());
         }
         index = offset + 2;
         if(!r[index].isNull())
         {
-            ord_=std::make_shared<int32_t>(r[index].as<int32_t>());
+            name_=std::make_shared<std::string>(r[index].as<std::string>());
+        }
+        index = offset + 3;
+        if(!r[index].isNull())
+        {
+            ord_=std::make_shared<std::string>(r[index].as<std::string>());
         }
     }
 
@@ -77,7 +88,7 @@ Candidate::Candidate(const Row &r, const ssize_t indexOffset) noexcept
 
 Candidate::Candidate(const Json::Value &pJson, const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 4)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -87,7 +98,7 @@ Candidate::Candidate(const Json::Value &pJson, const std::vector<std::string> &p
         dirtyFlag_[0] = true;
         if(!pJson[pMasqueradingVector[0]].isNull())
         {
-            poll_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[0]].asInt64());
+            id_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[0]].asInt64());
         }
     }
     if(!pMasqueradingVector[1].empty() && pJson.isMember(pMasqueradingVector[1]))
@@ -95,7 +106,7 @@ Candidate::Candidate(const Json::Value &pJson, const std::vector<std::string> &p
         dirtyFlag_[1] = true;
         if(!pJson[pMasqueradingVector[1]].isNull())
         {
-            name_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
+            poll_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
         }
     }
     if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
@@ -103,24 +114,40 @@ Candidate::Candidate(const Json::Value &pJson, const std::vector<std::string> &p
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            ord_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[2]].asInt64());
+            name_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
+        }
+    }
+    if(!pMasqueradingVector[3].empty() && pJson.isMember(pMasqueradingVector[3]))
+    {
+        dirtyFlag_[3] = true;
+        if(!pJson[pMasqueradingVector[3]].isNull())
+        {
+            ord_=std::make_shared<std::string>(pJson[pMasqueradingVector[3]].asString());
         }
     }
 }
 
 Candidate::Candidate(const Json::Value &pJson) noexcept(false)
 {
-    if(pJson.isMember("poll"))
+    if(pJson.isMember("id"))
     {
         dirtyFlag_[0]=true;
+        if(!pJson["id"].isNull())
+        {
+            id_=std::make_shared<int32_t>((int32_t)pJson["id"].asInt64());
+        }
+    }
+    if(pJson.isMember("poll"))
+    {
+        dirtyFlag_[1]=true;
         if(!pJson["poll"].isNull())
         {
-            poll_=std::make_shared<int32_t>((int32_t)pJson["poll"].asInt64());
+            poll_=std::make_shared<std::string>(pJson["poll"].asString());
         }
     }
     if(pJson.isMember("name"))
     {
-        dirtyFlag_[1]=true;
+        dirtyFlag_[2]=true;
         if(!pJson["name"].isNull())
         {
             name_=std::make_shared<std::string>(pJson["name"].asString());
@@ -128,10 +155,10 @@ Candidate::Candidate(const Json::Value &pJson) noexcept(false)
     }
     if(pJson.isMember("ord"))
     {
-        dirtyFlag_[2]=true;
+        dirtyFlag_[3]=true;
         if(!pJson["ord"].isNull())
         {
-            ord_=std::make_shared<int32_t>((int32_t)pJson["ord"].asInt64());
+            ord_=std::make_shared<std::string>(pJson["ord"].asString());
         }
     }
 }
@@ -139,7 +166,7 @@ Candidate::Candidate(const Json::Value &pJson) noexcept(false)
 void Candidate::updateByMasqueradedJson(const Json::Value &pJson,
                                             const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 4)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -149,7 +176,7 @@ void Candidate::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[0] = true;
         if(!pJson[pMasqueradingVector[0]].isNull())
         {
-            poll_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[0]].asInt64());
+            id_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[0]].asInt64());
         }
     }
     if(!pMasqueradingVector[1].empty() && pJson.isMember(pMasqueradingVector[1]))
@@ -157,7 +184,7 @@ void Candidate::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[1] = true;
         if(!pJson[pMasqueradingVector[1]].isNull())
         {
-            name_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
+            poll_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
         }
     }
     if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
@@ -165,24 +192,40 @@ void Candidate::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            ord_=std::make_shared<int32_t>((int32_t)pJson[pMasqueradingVector[2]].asInt64());
+            name_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
+        }
+    }
+    if(!pMasqueradingVector[3].empty() && pJson.isMember(pMasqueradingVector[3]))
+    {
+        dirtyFlag_[3] = true;
+        if(!pJson[pMasqueradingVector[3]].isNull())
+        {
+            ord_=std::make_shared<std::string>(pJson[pMasqueradingVector[3]].asString());
         }
     }
 }
 
 void Candidate::updateByJson(const Json::Value &pJson) noexcept(false)
 {
-    if(pJson.isMember("poll"))
+    if(pJson.isMember("id"))
     {
         dirtyFlag_[0] = true;
+        if(!pJson["id"].isNull())
+        {
+            id_=std::make_shared<int32_t>((int32_t)pJson["id"].asInt64());
+        }
+    }
+    if(pJson.isMember("poll"))
+    {
+        dirtyFlag_[1] = true;
         if(!pJson["poll"].isNull())
         {
-            poll_=std::make_shared<int32_t>((int32_t)pJson["poll"].asInt64());
+            poll_=std::make_shared<std::string>(pJson["poll"].asString());
         }
     }
     if(pJson.isMember("name"))
     {
-        dirtyFlag_[1] = true;
+        dirtyFlag_[2] = true;
         if(!pJson["name"].isNull())
         {
             name_=std::make_shared<std::string>(pJson["name"].asString());
@@ -190,34 +233,67 @@ void Candidate::updateByJson(const Json::Value &pJson) noexcept(false)
     }
     if(pJson.isMember("ord"))
     {
-        dirtyFlag_[2] = true;
+        dirtyFlag_[3] = true;
         if(!pJson["ord"].isNull())
         {
-            ord_=std::make_shared<int32_t>((int32_t)pJson["ord"].asInt64());
+            ord_=std::make_shared<std::string>(pJson["ord"].asString());
         }
     }
 }
 
-const int32_t &Candidate::getValueOfPoll() const noexcept
+void Candidate::setPoll(const int32_t &pPoll) noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    //poll_ = std::make_shared<int32_t>(pPoll);
+    dirtyFlag_[0] = true;
+}
+
+const int32_t &Candidate::getValueOfId() const noexcept
+{
+    static const int32_t defaultValue = int32_t();
+    if(id_)
+        return *id_;
+    return defaultValue;
+}
+const std::shared_ptr<int32_t> &Candidate::getId() const noexcept
+{
+    return id_;
+}
+void Candidate::setId(const int32_t &pId) noexcept
+{
+    //id_ = std::make_shared<int32_t>(pId);
+    dirtyFlag_[0] = true;
+}
+
+const std::string &Candidate::getValueOfPoll() const noexcept
+{
+    static const std::string defaultValue = std::string();
     if(poll_)
         return *poll_;
     return defaultValue;
 }
-const std::shared_ptr<int32_t> &Candidate::getPoll() const noexcept
+const std::shared_ptr<std::string> &Candidate::getPoll() const noexcept
 {
     return poll_;
 }
-void Candidate::setPoll(const int32_t &pPoll) noexcept
+void Candidate::setPoll(const std::string &pPoll) noexcept
 {
-    poll_ = std::make_shared<int32_t>(pPoll);
-    dirtyFlag_[0] = true;
+    poll_ = std::make_shared<std::string>(pPoll);
+    dirtyFlag_[1] = true;
+}
+void Candidate::setPoll(std::string &&pPoll) noexcept
+{
+    poll_ = std::make_shared<std::string>(std::move(pPoll));
+    dirtyFlag_[1] = true;
+}
+void Candidate::setPollToNull() noexcept
+{
+    poll_.reset();
+    dirtyFlag_[1] = true;
 }
 
 const std::string &Candidate::getValueOfName() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(name_)
         return *name_;
     return defaultValue;
@@ -229,35 +305,36 @@ const std::shared_ptr<std::string> &Candidate::getName() const noexcept
 void Candidate::setName(const std::string &pName) noexcept
 {
     name_ = std::make_shared<std::string>(pName);
-    dirtyFlag_[1] = true;
+    dirtyFlag_[2] = true;
 }
 void Candidate::setName(std::string &&pName) noexcept
 {
     name_ = std::make_shared<std::string>(std::move(pName));
-    dirtyFlag_[1] = true;
+    dirtyFlag_[2] = true;
+}
+void Candidate::setNameToNull() noexcept
+{
+    name_.reset();
+    dirtyFlag_[2] = true;
 }
 
-const int32_t &Candidate::getValueOfOrd() const noexcept
+const std::string &Candidate::getValueOfOrd() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const std::string defaultValue = std::string();
     if(ord_)
         return *ord_;
     return defaultValue;
 }
-const std::shared_ptr<int32_t> &Candidate::getOrd() const noexcept
+const std::shared_ptr<std::string> &Candidate::getOrd() const noexcept
 {
     return ord_;
 }
 void Candidate::setOrd(const int32_t &pOrd) noexcept
 {
-    ord_ = std::make_shared<int32_t>(pOrd);
-    dirtyFlag_[2] = true;
+    //ord_ = std::make_shared<int32_t>(pOrd);
+    dirtyFlag_[3] = true;
 }
-void Candidate::setOrdToNull() noexcept
-{
-    ord_.reset();
-    dirtyFlag_[2] = true;
-}
+
 
 void Candidate::updateId(const uint64_t id)
 {
@@ -266,6 +343,7 @@ void Candidate::updateId(const uint64_t id)
 const std::vector<std::string> &Candidate::insertColumns() noexcept
 {
     static const std::vector<std::string> inCols={
+        "id",
         "poll",
         "name",
         "ord"
@@ -277,6 +355,17 @@ void Candidate::outputArgs(drogon::orm::internal::SqlBinder &binder) const
 {
     if(dirtyFlag_[0])
     {
+        if(getId())
+        {
+            binder << getValueOfId();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
+    if(dirtyFlag_[1])
+    {
         if(getPoll())
         {
             binder << getValueOfPoll();
@@ -286,7 +375,7 @@ void Candidate::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[1])
+    if(dirtyFlag_[2])
     {
         if(getName())
         {
@@ -297,7 +386,7 @@ void Candidate::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[2])
+    if(dirtyFlag_[3])
     {
         if(getOrd())
         {
@@ -325,12 +414,27 @@ const std::vector<std::string> Candidate::updateColumns() const
     {
         ret.push_back(getColumnName(2));
     }
+    if(dirtyFlag_[3])
+    {
+        ret.push_back(getColumnName(3));
+    }
     return ret;
 }
 
 void Candidate::updateArgs(drogon::orm::internal::SqlBinder &binder) const
 {
     if(dirtyFlag_[0])
+    {
+        if(getId())
+        {
+            binder << getValueOfId();
+        }
+        else
+        {
+            binder << nullptr;
+        }
+    }
+    if(dirtyFlag_[1])
     {
         if(getPoll())
         {
@@ -341,7 +445,7 @@ void Candidate::updateArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[1])
+    if(dirtyFlag_[2])
     {
         if(getName())
         {
@@ -352,7 +456,7 @@ void Candidate::updateArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[2])
+    if(dirtyFlag_[3])
     {
         if(getOrd())
         {
@@ -367,6 +471,14 @@ void Candidate::updateArgs(drogon::orm::internal::SqlBinder &binder) const
 Json::Value Candidate::toJson() const
 {
     Json::Value ret;
+    if(getId())
+    {
+        ret["id"]=getValueOfId();
+    }
+    else
+    {
+        ret["id"]=Json::Value();
+    }
     if(getPoll())
     {
         ret["poll"]=getValueOfPoll();
@@ -398,13 +510,13 @@ Json::Value Candidate::toMasqueradedJson(
     const std::vector<std::string> &pMasqueradingVector) const
 {
     Json::Value ret;
-    if(pMasqueradingVector.size() == 3)
+    if(pMasqueradingVector.size() == 4)
     {
         if(!pMasqueradingVector[0].empty())
         {
-            if(getPoll())
+            if(getId())
             {
-                ret[pMasqueradingVector[0]]=getValueOfPoll();
+                ret[pMasqueradingVector[0]]=getValueOfId();
             }
             else
             {
@@ -413,9 +525,9 @@ Json::Value Candidate::toMasqueradedJson(
         }
         if(!pMasqueradingVector[1].empty())
         {
-            if(getName())
+            if(getPoll())
             {
-                ret[pMasqueradingVector[1]]=getValueOfName();
+                ret[pMasqueradingVector[1]]=getValueOfPoll();
             }
             else
             {
@@ -424,18 +536,37 @@ Json::Value Candidate::toMasqueradedJson(
         }
         if(!pMasqueradingVector[2].empty())
         {
-            if(getOrd())
+            if(getName())
             {
-                ret[pMasqueradingVector[2]]=getValueOfOrd();
+                ret[pMasqueradingVector[2]]=getValueOfName();
             }
             else
             {
                 ret[pMasqueradingVector[2]]=Json::Value();
             }
         }
+        if(!pMasqueradingVector[3].empty())
+        {
+            if(getOrd())
+            {
+                ret[pMasqueradingVector[3]]=getValueOfOrd();
+            }
+            else
+            {
+                ret[pMasqueradingVector[3]]=Json::Value();
+            }
+        }
         return ret;
     }
     LOG_ERROR << "Masquerade failed";
+    if(getId())
+    {
+        ret["id"]=getValueOfId();
+    }
+    else
+    {
+        ret["id"]=Json::Value();
+    }
     if(getPoll())
     {
         ret["poll"]=getValueOfPoll();
@@ -465,29 +596,29 @@ Json::Value Candidate::toMasqueradedJson(
 
 bool Candidate::validateJsonForCreation(const Json::Value &pJson, std::string &err)
 {
-    if(pJson.isMember("poll"))
+    if(pJson.isMember("id"))
     {
-        if(!validJsonOfField(0, "poll", pJson["poll"], err, true))
+        if(!validJsonOfField(0, "id", pJson["id"], err, true))
             return false;
     }
     else
     {
-        err="The poll column cannot be null";
+        err="The id column cannot be null";
         return false;
+    }
+    if(pJson.isMember("poll"))
+    {
+        if(!validJsonOfField(1, "poll", pJson["poll"], err, true))
+            return false;
     }
     if(pJson.isMember("name"))
     {
-        if(!validJsonOfField(1, "name", pJson["name"], err, true))
+        if(!validJsonOfField(2, "name", pJson["name"], err, true))
             return false;
-    }
-    else
-    {
-        err="The name column cannot be null";
-        return false;
     }
     if(pJson.isMember("ord"))
     {
-        if(!validJsonOfField(2, "ord", pJson["ord"], err, true))
+        if(!validJsonOfField(3, "ord", pJson["ord"], err, true))
             return false;
     }
     return true;
@@ -496,7 +627,7 @@ bool Candidate::validateMasqueradedJsonForCreation(const Json::Value &pJson,
                                                    const std::vector<std::string> &pMasqueradingVector,
                                                    std::string &err)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 4)
     {
         err = "Bad masquerading vector";
         return false;
@@ -522,17 +653,20 @@ bool Candidate::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(1, pMasqueradingVector[1], pJson[pMasqueradingVector[1]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[1] + " column cannot be null";
-            return false;
-        }
       }
       if(!pMasqueradingVector[2].empty())
       {
           if(pJson.isMember(pMasqueradingVector[2]))
           {
               if(!validJsonOfField(2, pMasqueradingVector[2], pJson[pMasqueradingVector[2]], err, true))
+                  return false;
+          }
+      }
+      if(!pMasqueradingVector[3].empty())
+      {
+          if(pJson.isMember(pMasqueradingVector[3]))
+          {
+              if(!validJsonOfField(3, pMasqueradingVector[3], pJson[pMasqueradingVector[3]], err, true))
                   return false;
           }
       }
@@ -546,19 +680,24 @@ bool Candidate::validateMasqueradedJsonForCreation(const Json::Value &pJson,
 }
 bool Candidate::validateJsonForUpdate(const Json::Value &pJson, std::string &err)
 {
+    if(pJson.isMember("id"))
+    {
+        if(!validJsonOfField(0, "id", pJson["id"], err, false))
+            return false;
+    }
     if(pJson.isMember("poll"))
     {
-        if(!validJsonOfField(0, "poll", pJson["poll"], err, false))
+        if(!validJsonOfField(1, "poll", pJson["poll"], err, false))
             return false;
     }
     if(pJson.isMember("name"))
     {
-        if(!validJsonOfField(1, "name", pJson["name"], err, false))
+        if(!validJsonOfField(2, "name", pJson["name"], err, false))
             return false;
     }
     if(pJson.isMember("ord"))
     {
-        if(!validJsonOfField(2, "ord", pJson["ord"], err, false))
+        if(!validJsonOfField(3, "ord", pJson["ord"], err, false))
             return false;
     }
     return true;
@@ -567,7 +706,7 @@ bool Candidate::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
                                                  const std::vector<std::string> &pMasqueradingVector,
                                                  std::string &err)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 4)
     {
         err = "Bad masquerading vector";
         return false;
@@ -586,6 +725,11 @@ bool Candidate::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
       if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
       {
           if(!validJsonOfField(2, pMasqueradingVector[2], pJson[pMasqueradingVector[2]], err, false))
+              return false;
+      }
+      if(!pMasqueradingVector[3].empty() && pJson.isMember(pMasqueradingVector[3]))
+      {
+          if(!validJsonOfField(3, pMasqueradingVector[3], pJson[pMasqueradingVector[3]], err, false))
               return false;
       }
     }
@@ -619,8 +763,7 @@ bool Candidate::validJsonOfField(size_t index,
         case 1:
             if(pJson.isNull())
             {
-                err="The " + fieldName + " column cannot be null";
-                return false;
+                return true;
             }
             if(!pJson.isString())
             {
@@ -633,7 +776,18 @@ bool Candidate::validJsonOfField(size_t index,
             {
                 return true;
             }
-            if(!pJson.isInt())
+            if(!pJson.isString())
+            {
+                err="Type error in the "+fieldName+" field";
+                return false;
+            }
+            break;
+        case 3:
+            if(pJson.isNull())
+            {
+                return true;
+            }
+            if(!pJson.isString())
             {
                 err="Type error in the "+fieldName+" field";
                 return false;

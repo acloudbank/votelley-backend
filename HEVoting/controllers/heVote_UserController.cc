@@ -3,7 +3,7 @@
 #include "models/Users.h"
 
 using namespace heVote;
-
+ //Can't create model from the, please check privileges on the table
 // Add definition of your processing function here
 
 UserController::UserController(): dbClient(app().getDbClient()) {
