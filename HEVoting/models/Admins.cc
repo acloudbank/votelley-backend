@@ -21,9 +21,9 @@ const bool Admins::hasPrimaryKey = true;
 const std::string Admins::tableName = "admins";
 
 const std::vector<typename Admins::MetaData> Admins::metaData_={
-{"id","int32_t","integer",4,0,1,1},
-{"username","std::string","character varying",70,0,0,0},
-{"pass","std::string","character varying",21,0,0,0}
+{"id","int32_t","integer",4,1,1,1},
+{"username","std::string","text",0,0,0,0},
+{"pass","std::string","text",0,0,0,0}
 };
 const std::string &Admins::getColumnName(size_t index) noexcept(false)
 {
@@ -198,7 +198,7 @@ void Admins::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Admins::getValueOfId() const noexcept
 {
-    static const int32_t defaultValue = int32_t();
+    const static int32_t defaultValue = int32_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename Admins::PrimaryKeyType & Admins::getPrimaryKey() const
 
 const std::string &Admins::getValueOfUsername() const noexcept
 {
-    static const std::string defaultValue = std::string();
+    const static std::string defaultValue = std::string();
     if(username_)
         return *username_;
     return defaultValue;
@@ -247,7 +247,7 @@ void Admins::setUsernameToNull() noexcept
 
 const std::string &Admins::getValueOfPass() const noexcept
 {
-    static const std::string defaultValue = std::string();
+    const static std::string defaultValue = std::string();
     if(pass_)
         return *pass_;
     return defaultValue;
@@ -279,7 +279,6 @@ void Admins::updateId(const uint64_t id)
 const std::vector<std::string> &Admins::insertColumns() noexcept
 {
     static const std::vector<std::string> inCols={
-        "id",
         "username",
         "pass"
     };
@@ -288,17 +287,6 @@ const std::vector<std::string> &Admins::insertColumns() noexcept
 
 void Admins::outputArgs(drogon::orm::internal::SqlBinder &binder) const
 {
-    if(dirtyFlag_[0])
-    {
-        if(getId())
-        {
-            binder << getValueOfId();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
     if(dirtyFlag_[1])
     {
         if(getUsername())
@@ -326,10 +314,6 @@ void Admins::outputArgs(drogon::orm::internal::SqlBinder &binder) const
 const std::vector<std::string> Admins::updateColumns() const
 {
     std::vector<std::string> ret;
-    if(dirtyFlag_[0])
-    {
-        ret.push_back(getColumnName(0));
-    }
     if(dirtyFlag_[1])
     {
         ret.push_back(getColumnName(1));
@@ -343,17 +327,6 @@ const std::vector<std::string> Admins::updateColumns() const
 
 void Admins::updateArgs(drogon::orm::internal::SqlBinder &binder) const
 {
-    if(dirtyFlag_[0])
-    {
-        if(getId())
-        {
-            binder << getValueOfId();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
     if(dirtyFlag_[1])
     {
         if(getUsername())
@@ -483,11 +456,6 @@ bool Admins::validateJsonForCreation(const Json::Value &pJson, std::string &err)
         if(!validJsonOfField(0, "id", pJson["id"], err, true))
             return false;
     }
-    else
-    {
-        err="The id column cannot be null";
-        return false;
-    }
     if(pJson.isMember("username"))
     {
         if(!validJsonOfField(1, "username", pJson["username"], err, true))
@@ -517,11 +485,6 @@ bool Admins::validateMasqueradedJsonForCreation(const Json::Value &pJson,
               if(!validJsonOfField(0, pMasqueradingVector[0], pJson[pMasqueradingVector[0]], err, true))
                   return false;
           }
-        else
-        {
-            err="The " + pMasqueradingVector[0] + " column cannot be null";
-            return false;
-        }
       }
       if(!pMasqueradingVector[1].empty())
       {
@@ -623,6 +586,11 @@ bool Admins::validJsonOfField(size_t index,
                 err="The " + fieldName + " column cannot be null";
                 return false;
             }
+            if(isForCreation)
+            {
+                err="The automatic primary key cannot be set";
+                return false;
+            }
             if(!pJson.isInt())
             {
                 err="Type error in the "+fieldName+" field";
@@ -639,14 +607,6 @@ bool Admins::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            if(pJson.isString() && std::strlen(pJson.asCString()) > 70)
-            {
-                err="String length exceeds limit for the " +
-                    fieldName +
-                    " field (the maximum value is 70)";
-                return false;
-            }
-
             break;
         case 2:
             if(pJson.isNull())
@@ -658,14 +618,6 @@ bool Admins::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            if(pJson.isString() && std::strlen(pJson.asCString()) > 21)
-            {
-                err="String length exceeds limit for the " +
-                    fieldName +
-                    " field (the maximum value is 21)";
-                return false;
-            }
-
             break;
         default:
             err="Internal error in the server";

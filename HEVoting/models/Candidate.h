@@ -11,7 +11,6 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
-#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -19,7 +18,6 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
-#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -44,16 +42,15 @@ class Candidate
   public:
     struct Cols
     {
-        static const std::string _id;
         static const std::string _poll;
         static const std::string _name;
         static const std::string _ord;
     };
 
-    static const int primaryKeyNumber;
-    static const std::string tableName;
-    static const bool hasPrimaryKey;
-    static const std::string primaryKeyName;
+    const static int primaryKeyNumber;
+    const static std::string tableName;
+    const static bool hasPrimaryKey;
+    const static std::string primaryKeyName;
     using PrimaryKeyType = void;
     int getPrimaryKey() const { assert(false); return 0; }
 
@@ -99,24 +96,13 @@ class Candidate
                           std::string &err,
                           bool isForCreation);
 
-    /**  For column id  */
-    ///Get the value of the column id, returns the default value if the column is null
-    const int32_t &getValueOfId() const noexcept;
-    ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<int32_t> &getId() const noexcept;
-    ///Set the value of the column id
-    void setId(const int32_t &pId) noexcept;
-
     /**  For column poll  */
     ///Get the value of the column poll, returns the default value if the column is null
-    const std::string &getValueOfPoll() const noexcept;
+    const int32_t &getValueOfPoll() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::string> &getPoll() const noexcept;
+    const std::shared_ptr<int32_t> &getPoll() const noexcept;
     ///Set the value of the column poll
     void setPoll(const int32_t &pPoll) noexcept;
-    void setPoll(const std::string &pPoll) noexcept;
-    void setPoll(std::string &&pPoll) noexcept;
-    void setPollToNull() noexcept;
 
     /**  For column name  */
     ///Get the value of the column name, returns the default value if the column is null
@@ -126,18 +112,18 @@ class Candidate
     ///Set the value of the column name
     void setName(const std::string &pName) noexcept;
     void setName(std::string &&pName) noexcept;
-    void setNameToNull() noexcept;
 
     /**  For column ord  */
     ///Get the value of the column ord, returns the default value if the column is null
-    const std::string &getValueOfOrd() const noexcept;
+    const int32_t &getValueOfOrd() const noexcept;
     ///Return a shared_ptr object pointing to the column const value, or an empty shared_ptr object if the column is null
-    const std::shared_ptr<std::string> &getOrd() const noexcept;
+    const std::shared_ptr<int32_t> &getOrd() const noexcept;
     ///Set the value of the column ord
     void setOrd(const int32_t &pOrd) noexcept;
-    
+    void setOrdToNull() noexcept;
 
-    static size_t getColumnNumber() noexcept {  return 4;  }
+
+    static size_t getColumnNumber() noexcept {  return 3;  }
     static const std::string &getColumnName(size_t index) noexcept(false);
 
     Json::Value toJson() const;
@@ -145,10 +131,6 @@ class Candidate
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Candidate>;
-    friend drogon::orm::BaseBuilder<Candidate, true, true>;
-    friend drogon::orm::BaseBuilder<Candidate, true, false>;
-    friend drogon::orm::BaseBuilder<Candidate, false, true>;
-    friend drogon::orm::BaseBuilder<Candidate, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Candidate>;
 #endif
@@ -158,10 +140,9 @@ class Candidate
     void updateArgs(drogon::orm::internal::SqlBinder &binder) const;
     ///For mysql or sqlite3
     void updateId(const uint64_t id);
-    std::shared_ptr<int32_t> id_;
-    std::shared_ptr<std::string> poll_;
+    std::shared_ptr<int32_t> poll_;
     std::shared_ptr<std::string> name_;
-    std::shared_ptr<std::string> ord_;
+    std::shared_ptr<int32_t> ord_;
     struct MetaData
     {
         const std::string colName_;
@@ -173,7 +154,7 @@ class Candidate
         const bool notNull_;
     };
     static const std::vector<MetaData> metaData_;
-    bool dirtyFlag_[4]={ false };
+    bool dirtyFlag_[3]={ false };
   public:
     static const std::string &sqlForFindingByPrimaryKey()
     {
@@ -193,20 +174,15 @@ class Candidate
         needSelection = false;
         if(dirtyFlag_[0])
         {
-            sql += "id,";
+            sql += "poll,";
             ++parametersCount;
         }
         if(dirtyFlag_[1])
         {
-            sql += "poll,";
-            ++parametersCount;
-        }
-        if(dirtyFlag_[2])
-        {
             sql += "name,";
             ++parametersCount;
         }
-        if(dirtyFlag_[3])
+        if(dirtyFlag_[2])
         {
             sql += "ord,";
             ++parametersCount;
@@ -224,22 +200,17 @@ class Candidate
         size_t n=0;
         if(dirtyFlag_[0])
         {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            n = sprintf(placeholderStr,"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[1])
         {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            n = sprintf(placeholderStr,"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
-            sql.append(placeholderStr, n);
-        }
-        if(dirtyFlag_[3])
-        {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            n = sprintf(placeholderStr,"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)

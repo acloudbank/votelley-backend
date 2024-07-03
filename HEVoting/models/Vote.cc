@@ -8,6 +8,7 @@
 #include "Vote.h"
 #include <drogon/utils/Utilities.h>
 #include <string>
+#include <string_view>
 
 using namespace drogon;
 using namespace drogon::orm;
@@ -23,7 +24,7 @@ const std::string Vote::tableName = "vote";
 const std::vector<typename Vote::MetaData> Vote::metaData_={
 {"user_id","int32_t","integer",4,0,0,1},
 {"poll_id","int32_t","integer",4,0,0,1},
-{"vote","std::string","character varying",0,0,0,0}
+{"vote","std::vector<char>","bytea",0,0,0,0}
 };
 const std::string &Vote::getColumnName(size_t index) noexcept(false)
 {
@@ -44,7 +45,12 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         }
         if(!r["vote"].isNull())
         {
-            vote_=std::make_shared<std::string>(r["vote"].as<std::string>());
+            auto str = r["vote"].as<string_view>();
+            if(str.length()>=2&&
+                str[0]=='\\'&&str[1]=='x')
+            {
+                vote_=std::make_shared<std::vector<char>>(drogon::utils::hexToBinaryVector(str.data()+2,str.length()-2));
+            }
         }
     }
     else
@@ -69,7 +75,12 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 2;
         if(!r[index].isNull())
         {
-            vote_=std::make_shared<std::string>(r[index].as<std::string>());
+            auto str = r[index].as<string_view>();
+            if(str.length()>=2&&
+                str[0]=='\\'&&str[1]=='x')
+            {
+                vote_=std::make_shared<std::vector<char>>(drogon::utils::hexToBinaryVector(str.data()+2,str.length()-2));
+            }
         }
     }
 
@@ -103,7 +114,8 @@ Vote::Vote(const Json::Value &pJson, const std::vector<std::string> &pMasqueradi
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            vote_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
+            auto str = pJson[pMasqueradingVector[2]].asString();
+            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
         }
     }
 }
@@ -131,7 +143,8 @@ Vote::Vote(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[2]=true;
         if(!pJson["vote"].isNull())
         {
-            vote_=std::make_shared<std::string>(pJson["vote"].asString());
+            auto str = pJson["vote"].asString();
+            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
         }
     }
 }
@@ -165,7 +178,8 @@ void Vote::updateByMasqueradedJson(const Json::Value &pJson,
         dirtyFlag_[2] = true;
         if(!pJson[pMasqueradingVector[2]].isNull())
         {
-            vote_=std::make_shared<std::string>(pJson[pMasqueradingVector[2]].asString());
+            auto str = pJson[pMasqueradingVector[2]].asString();
+            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
         }
     }
 }
@@ -193,14 +207,15 @@ void Vote::updateByJson(const Json::Value &pJson) noexcept(false)
         dirtyFlag_[2] = true;
         if(!pJson["vote"].isNull())
         {
-            vote_=std::make_shared<std::string>(pJson["vote"].asString());
+            auto str = pJson["vote"].asString();
+            vote_=std::make_shared<std::vector<char>>(drogon::utils::base64DecodeToVector(str));
         }
     }
 }
 
 const int32_t &Vote::getValueOfUserId() const noexcept
 {
-    static const int32_t defaultValue = int32_t();
+    const static int32_t defaultValue = int32_t();
     if(userId_)
         return *userId_;
     return defaultValue;
@@ -217,7 +232,7 @@ void Vote::setUserId(const int32_t &pUserId) noexcept
 
 const int32_t &Vote::getValueOfPollId() const noexcept
 {
-    static const int32_t defaultValue = int32_t();
+    const static int32_t defaultValue = int32_t();
     if(pollId_)
         return *pollId_;
     return defaultValue;
@@ -232,25 +247,32 @@ void Vote::setPollId(const int32_t &pPollId) noexcept
     dirtyFlag_[1] = true;
 }
 
-const std::string &Vote::getValueOfVote() const noexcept
+const std::vector<char> &Vote::getValueOfVote() const noexcept
 {
-    static const std::string defaultValue = std::string();
+    const static std::vector<char> defaultValue = std::vector<char>();
     if(vote_)
         return *vote_;
     return defaultValue;
 }
-const std::shared_ptr<std::string> &Vote::getVote() const noexcept
+std::string Vote::getValueOfVoteAsString() const noexcept
+{
+    const static std::string defaultValue = std::string();
+    if(vote_)
+        return std::string(vote_->data(),vote_->size());
+    return defaultValue;
+}
+const std::shared_ptr<std::vector<char>> &Vote::getVote() const noexcept
 {
     return vote_;
 }
-void Vote::setVote(const std::string &pVote) noexcept
+void Vote::setVote(const std::vector<char> &pVote) noexcept
 {
-    vote_ = std::make_shared<std::string>(pVote);
+    vote_ = std::make_shared<std::vector<char>>(pVote);
     dirtyFlag_[2] = true;
 }
-void Vote::setVote(std::string &&pVote) noexcept
+void Vote::setVote(const std::string &pVote) noexcept
 {
-    vote_ = std::make_shared<std::string>(std::move(pVote));
+    vote_ = std::make_shared<std::vector<char>>(pVote.c_str(),pVote.c_str()+pVote.length());
     dirtyFlag_[2] = true;
 }
 void Vote::setVoteToNull() noexcept
@@ -385,7 +407,7 @@ Json::Value Vote::toJson() const
     }
     if(getVote())
     {
-        ret["vote"]=getValueOfVote();
+        ret["vote"]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
     }
     else
     {
@@ -426,7 +448,7 @@ Json::Value Vote::toMasqueradedJson(
         {
             if(getVote())
             {
-                ret[pMasqueradingVector[2]]=getValueOfVote();
+                ret[pMasqueradingVector[2]]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
             }
             else
             {
@@ -454,7 +476,7 @@ Json::Value Vote::toMasqueradedJson(
     }
     if(getVote())
     {
-        ret["vote"]=getValueOfVote();
+        ret["vote"]=drogon::utils::base64Encode((const unsigned char *)getVote()->data(),getVote()->size());
     }
     else
     {

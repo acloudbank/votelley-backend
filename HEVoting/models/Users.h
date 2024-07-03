@@ -11,7 +11,6 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
-#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -19,7 +18,6 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
-#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -49,10 +47,10 @@ class Users
         static const std::string _pass;
     };
 
-    static const int primaryKeyNumber;
-    static const std::string tableName;
-    static const bool hasPrimaryKey;
-    static const std::string primaryKeyName;
+    const static int primaryKeyNumber;
+    const static std::string tableName;
+    const static bool hasPrimaryKey;
+    const static std::string primaryKeyName;
     using PrimaryKeyType = int32_t;
     const PrimaryKeyType &getPrimaryKey() const;
 
@@ -114,7 +112,6 @@ class Users
     ///Set the value of the column username
     void setUsername(const std::string &pUsername) noexcept;
     void setUsername(std::string &&pUsername) noexcept;
-    void setUsernameToNull() noexcept;
 
     /**  For column pass  */
     ///Get the value of the column pass, returns the default value if the column is null
@@ -124,7 +121,6 @@ class Users
     ///Set the value of the column pass
     void setPass(const std::string &pPass) noexcept;
     void setPass(std::string &&pPass) noexcept;
-    void setPassToNull() noexcept;
 
 
     static size_t getColumnNumber() noexcept {  return 3;  }
@@ -135,10 +131,6 @@ class Users
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Users>;
-    friend drogon::orm::BaseBuilder<Users, true, true>;
-    friend drogon::orm::BaseBuilder<Users, true, false>;
-    friend drogon::orm::BaseBuilder<Users, false, true>;
-    friend drogon::orm::BaseBuilder<Users, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Users>;
 #endif
@@ -180,11 +172,8 @@ class Users
         std::string sql="insert into " + tableName + " (";
         size_t parametersCount = 0;
         needSelection = false;
-        if(dirtyFlag_[0])
-        {
             sql += "id,";
             ++parametersCount;
-        }
         if(dirtyFlag_[1])
         {
             sql += "username,";
@@ -195,6 +184,7 @@ class Users
             sql += "pass,";
             ++parametersCount;
         }
+        needSelection=true;
         if(parametersCount > 0)
         {
             sql[sql.length()-1]=')';
@@ -206,19 +196,15 @@ class Users
         int placeholder=1;
         char placeholderStr[64];
         size_t n=0;
-        if(dirtyFlag_[0])
-        {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
-            sql.append(placeholderStr, n);
-        }
+        sql +="default,";
         if(dirtyFlag_[1])
         {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            n = sprintf(placeholderStr,"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
+            n = sprintf(placeholderStr,"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)
