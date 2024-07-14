@@ -13,8 +13,8 @@
       "rdbms": "postgresql",
       "host": "127.0.0.1",
       "port": 5432,
-      "dbname": "votingregister",
-      "user": "votingregister",
+      "dbname": "votingregister2",
+      "user": "postgres",
       "passwd": "Sdennis2023",
       "is_fast": false,
       "number_of_connections": 1,
@@ -23,7 +23,7 @@
     }
   ],
   "app": {
-    "number_of_threads": 6,
+    "number_of_threads": 0,
     "enable_session": true,
     "session_timeout": 0,
     "session_same_site": "Null",

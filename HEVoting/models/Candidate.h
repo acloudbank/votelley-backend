@@ -11,6 +11,7 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
+#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -18,6 +19,7 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -34,7 +36,7 @@ using DbClientPtr = std::shared_ptr<DbClient>;
 }
 namespace drogon_model
 {
-namespace votingregister
+namespace votingregister2
 {
 
 class Candidate
@@ -47,10 +49,10 @@ class Candidate
         static const std::string _ord;
     };
 
-    const static int primaryKeyNumber;
-    const static std::string tableName;
-    const static bool hasPrimaryKey;
-    const static std::string primaryKeyName;
+    static const int primaryKeyNumber;
+    static const std::string tableName;
+    static const bool hasPrimaryKey;
+    static const std::string primaryKeyName;
     using PrimaryKeyType = void;
     int getPrimaryKey() const { assert(false); return 0; }
 
@@ -131,6 +133,10 @@ class Candidate
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Candidate>;
+    friend drogon::orm::BaseBuilder<Candidate, true, true>;
+    friend drogon::orm::BaseBuilder<Candidate, true, false>;
+    friend drogon::orm::BaseBuilder<Candidate, false, true>;
+    friend drogon::orm::BaseBuilder<Candidate, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Candidate>;
 #endif
@@ -200,17 +206,17 @@ class Candidate
         size_t n=0;
         if(dirtyFlag_[0])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[1])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)
@@ -229,5 +235,5 @@ class Candidate
         return sql;
     }
 };
-} // namespace votingregister
+} // namespace votingregister2
 } // namespace drogon_model

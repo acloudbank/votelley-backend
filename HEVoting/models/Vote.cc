@@ -8,11 +8,10 @@
 #include "Vote.h"
 #include <drogon/utils/Utilities.h>
 #include <string>
-#include <string_view>
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::votingregister;
+using namespace drogon_model::votingregister2;
 
 const std::string Vote::Cols::_user_id = "user_id";
 const std::string Vote::Cols::_poll_id = "poll_id";
@@ -45,7 +44,7 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         }
         if(!r["vote"].isNull())
         {
-            auto str = r["vote"].as<string_view>();
+            auto str = r["vote"].as<std::string_view>();
             if(str.length()>=2&&
                 str[0]=='\\'&&str[1]=='x')
             {
@@ -75,7 +74,7 @@ Vote::Vote(const Row &r, const ssize_t indexOffset) noexcept
         index = offset + 2;
         if(!r[index].isNull())
         {
-            auto str = r[index].as<string_view>();
+            auto str = r[index].as<std::string_view>();
             if(str.length()>=2&&
                 str[0]=='\\'&&str[1]=='x')
             {
@@ -215,7 +214,7 @@ void Vote::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Vote::getValueOfUserId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(userId_)
         return *userId_;
     return defaultValue;
@@ -232,7 +231,7 @@ void Vote::setUserId(const int32_t &pUserId) noexcept
 
 const int32_t &Vote::getValueOfPollId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(pollId_)
         return *pollId_;
     return defaultValue;
@@ -249,14 +248,14 @@ void Vote::setPollId(const int32_t &pPollId) noexcept
 
 const std::vector<char> &Vote::getValueOfVote() const noexcept
 {
-    const static std::vector<char> defaultValue = std::vector<char>();
+    static const std::vector<char> defaultValue = std::vector<char>();
     if(vote_)
         return *vote_;
     return defaultValue;
 }
 std::string Vote::getValueOfVoteAsString() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(vote_)
         return std::string(vote_->data(),vote_->size());
     return defaultValue;

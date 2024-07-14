@@ -81,7 +81,7 @@ namespace heVote {
 		auto& reqJson = *(req->getJsonObject());
 		//init mappers
 		//init poll with title
-		drogon_model::votingregister::Poll newPoll;
+		drogon_model::votingregister2::Poll newPoll;
 		newPoll.setTitle(reqJson["title"].asString());
 		LOG_INFO << reqJson["endTime"].asInt64();
 		newPoll.setLastsUntil(trantor::Date(reqJson["endTime"].asInt64()*1000L));
@@ -90,8 +90,8 @@ namespace heVote {
 
 		auto transaction =  dbClient->newTransaction();
 		//init mappers
-		drogon::orm::Mapper<drogon_model::votingregister::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister::Poll>(transaction);
-		drogon::orm::Mapper<drogon_model::votingregister::Candidate> candidateMapper = drogon::orm::Mapper<drogon_model::votingregister::Candidate>(transaction);
+		drogon::orm::Mapper<drogon_model::votingregister2::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister2::Poll>(transaction);
+		drogon::orm::Mapper<drogon_model::votingregister2::Candidate> candidateMapper = drogon::orm::Mapper<drogon_model::votingregister2::Candidate>(transaction);
 
 		//init keygen and secret key
 		seal::KeyGenerator keygen(*(this->context));
@@ -120,7 +120,7 @@ namespace heVote {
 			pollMapper.insert(newPoll);
 			int32_t order = 1;
 			for (auto& i : reqJson["contacts"]) {
-				drogon_model::votingregister::Candidate newCandidate;
+				drogon_model::votingregister2::Candidate newCandidate;
 				std::string name = i["name"].asString();
 				newCandidate.setName(name);
 				newCandidate.setOrd(order);
@@ -263,14 +263,14 @@ namespace heVote {
 		ciphertext.load(*(this->context), strstream);
 		delete[] bin;
 
-		drogon::orm::Mapper<drogon_model::votingregister::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister::Poll>(dbClient);
+		drogon::orm::Mapper<drogon_model::votingregister2::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister2::Poll>(dbClient);
 
 		
 		pollMapper.findOne(
-			drogon::orm::Criteria(drogon_model::votingregister::Poll::Cols::_id, drogon::orm::CompareOperator::EQ, std::stoi(votingId)),
-			[=](const drogon_model::votingregister::Poll& poll) {
-				drogon::orm::Mapper<drogon_model::votingregister::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister::Poll>(dbClient);
-				drogon::orm::Mapper<drogon_model::votingregister::Vote> voteMapper = drogon::orm::Mapper<drogon_model::votingregister::Vote>(dbClient);
+			drogon::orm::Criteria(drogon_model::votingregister2::Poll::Cols::_id, drogon::orm::CompareOperator::EQ, std::stoi(votingId)),
+			[=](const drogon_model::votingregister2::Poll& poll) {
+				drogon::orm::Mapper<drogon_model::votingregister2::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister2::Poll>(dbClient);
+				drogon::orm::Mapper<drogon_model::votingregister2::Vote> voteMapper = drogon::orm::Mapper<drogon_model::votingregister2::Vote>(dbClient);
 
 				seal::Evaluator evaluator(*(this->context));
 				seal::SecretKey secretkey;
@@ -332,7 +332,7 @@ namespace heVote {
 				ciphertextVotes.save(strstream);
 				std::string ciphertextVotesStr = strstream.str();
 
-				drogon_model::votingregister::Poll newPoll;
+				drogon_model::votingregister2::Poll newPoll;
 				newPoll.setVotes(ciphertextVotesStr);
 				newPoll.setId(poll.getValueOfId());
 				newPoll.setTitle(poll.getValueOfTitle());
@@ -368,17 +368,17 @@ namespace heVote {
 		
 		auto pollId = std::make_shared<int32_t>(std::stoi(votingId));
 		int32_t pollId2 = std::stoi(votingId);
-		drogon::orm::Mapper<drogon_model::votingregister::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister::Poll>(dbClient);
+		drogon::orm::Mapper<drogon_model::votingregister2::Poll> pollMapper = drogon::orm::Mapper<drogon_model::votingregister2::Poll>(dbClient);
 
 		pollMapper.findOne(
-			drogon::orm::Criteria(drogon_model::votingregister::Poll::Cols::_id, drogon::orm::CompareOperator::EQ, pollId2),
-			[=](const drogon_model::votingregister::Poll& poll) {
-					drogon::orm::Mapper<drogon_model::votingregister::Candidate> candidateMapper = drogon::orm::Mapper<drogon_model::votingregister::Candidate>(dbClient);
-					drogon_model::votingregister::Poll poll2 = poll;
+			drogon::orm::Criteria(drogon_model::votingregister2::Poll::Cols::_id, drogon::orm::CompareOperator::EQ, pollId2),
+			[=](const drogon_model::votingregister2::Poll& poll) {
+					drogon::orm::Mapper<drogon_model::votingregister2::Candidate> candidateMapper = drogon::orm::Mapper<drogon_model::votingregister2::Candidate>(dbClient);
+					drogon_model::votingregister2::Poll poll2 = poll;
 					trantor::Date currentTime = trantor::Date::date();
 					candidateMapper.findBy(
-						drogon::orm::Criteria(drogon_model::votingregister::Candidate::Cols::_poll, drogon::orm::CompareOperator::EQ, pollId2), 
-						[=](const std::vector<drogon_model::votingregister::Candidate>& candidates) {
+						drogon::orm::Criteria(drogon_model::votingregister2::Candidate::Cols::_poll, drogon::orm::CompareOperator::EQ, pollId2), 
+						[=](const std::vector<drogon_model::votingregister2::Candidate>& candidates) {
 							Json::Value jsonBody(Json::objectValue);
 							auto resp = HttpResponse::newHttpResponse();
 							resp->setStatusCode(HttpStatusCode::k200OK);

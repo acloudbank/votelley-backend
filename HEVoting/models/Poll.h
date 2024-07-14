@@ -11,6 +11,7 @@
 #include <drogon/orm/Field.h>
 #include <drogon/orm/SqlBinder.h>
 #include <drogon/orm/Mapper.h>
+#include <drogon/orm/BaseBuilder.h>
 #ifdef __cpp_impl_coroutine
 #include <drogon/orm/CoroMapper.h>
 #endif
@@ -18,12 +19,12 @@
 #include <trantor/utils/Logger.h>
 #include <json/json.h>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <vector>
 #include <tuple>
 #include <stdint.h>
 #include <iostream>
-#include<string_view>
 
 namespace drogon
 {
@@ -35,7 +36,7 @@ using DbClientPtr = std::shared_ptr<DbClient>;
 }
 namespace drogon_model
 {
-namespace votingregister
+namespace votingregister2
 {
 
 class Poll
@@ -51,10 +52,10 @@ class Poll
         static const std::string _lasts_from;
     };
 
-    const static int primaryKeyNumber;
-    const static std::string tableName;
-    const static bool hasPrimaryKey;
-    const static std::string primaryKeyName;
+    static const int primaryKeyNumber;
+    static const std::string tableName;
+    static const bool hasPrimaryKey;
+    static const std::string primaryKeyName;
     using PrimaryKeyType = int32_t;
     const PrimaryKeyType &getPrimaryKey() const;
 
@@ -169,6 +170,10 @@ class Poll
     /// Relationship interfaces
   private:
     friend drogon::orm::Mapper<Poll>;
+    friend drogon::orm::BaseBuilder<Poll, true, true>;
+    friend drogon::orm::BaseBuilder<Poll, true, false>;
+    friend drogon::orm::BaseBuilder<Poll, false, true>;
+    friend drogon::orm::BaseBuilder<Poll, false, false>;
 #ifdef __cpp_impl_coroutine
     friend drogon::orm::CoroMapper<Poll>;
 #endif
@@ -255,27 +260,27 @@ class Poll
         sql +="default,";
         if(dirtyFlag_[1])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[2])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[3])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[4])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(dirtyFlag_[5])
         {
-            n = sprintf(placeholderStr,"$%d,",placeholder++);
+            n = snprintf(placeholderStr,sizeof(placeholderStr),"$%d,",placeholder++);
             sql.append(placeholderStr, n);
         }
         if(parametersCount > 0)
@@ -294,5 +299,5 @@ class Poll
         return sql;
     }
 };
-} // namespace votingregister
+} // namespace votingregister2
 } // namespace drogon_model

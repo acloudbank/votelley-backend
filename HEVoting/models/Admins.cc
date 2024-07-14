@@ -11,7 +11,7 @@
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::votingregister;
+using namespace drogon_model::votingregister2;
 
 const std::string Admins::Cols::_id = "id";
 const std::string Admins::Cols::_username = "username";
@@ -198,7 +198,7 @@ void Admins::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Admins::getValueOfId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename Admins::PrimaryKeyType & Admins::getPrimaryKey() const
 
 const std::string &Admins::getValueOfUsername() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(username_)
         return *username_;
     return defaultValue;
@@ -247,7 +247,7 @@ void Admins::setUsernameToNull() noexcept
 
 const std::string &Admins::getValueOfPass() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(pass_)
         return *pass_;
     return defaultValue;

@@ -11,7 +11,7 @@
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::votingregister;
+using namespace drogon_model::votingregister2;
 
 const std::string Users::Cols::_id = "id";
 const std::string Users::Cols::_username = "username";
@@ -198,7 +198,7 @@ void Users::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Users::getValueOfId() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(id_)
         return *id_;
     return defaultValue;
@@ -220,7 +220,7 @@ const typename Users::PrimaryKeyType & Users::getPrimaryKey() const
 
 const std::string &Users::getValueOfUsername() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(username_)
         return *username_;
     return defaultValue;
@@ -242,7 +242,7 @@ void Users::setUsername(std::string &&pUsername) noexcept
 
 const std::string &Users::getValueOfPass() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(pass_)
         return *pass_;
     return defaultValue;
@@ -618,8 +618,7 @@ bool Users::validJsonOfField(size_t index,
                 err="Type error in the "+fieldName+" field";
                 return false;
             }
-            // asString().length() creates a string object, is there any better way to validate the length?
-            if(pJson.isString() && pJson.asString().length() > 32)
+            if(pJson.isString() && std::strlen(pJson.asCString()) > 32)
             {
                 err="String length exceeds limit for the " +
                     fieldName +

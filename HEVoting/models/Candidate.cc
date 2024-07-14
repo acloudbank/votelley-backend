@@ -11,7 +11,7 @@
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::votingregister;
+using namespace drogon_model::votingregister2;
 
 const std::string Candidate::Cols::_poll = "poll";
 const std::string Candidate::Cols::_name = "name";
@@ -200,7 +200,7 @@ void Candidate::updateByJson(const Json::Value &pJson) noexcept(false)
 
 const int32_t &Candidate::getValueOfPoll() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(poll_)
         return *poll_;
     return defaultValue;
@@ -217,7 +217,7 @@ void Candidate::setPoll(const int32_t &pPoll) noexcept
 
 const std::string &Candidate::getValueOfName() const noexcept
 {
-    const static std::string defaultValue = std::string();
+    static const std::string defaultValue = std::string();
     if(name_)
         return *name_;
     return defaultValue;
@@ -239,7 +239,7 @@ void Candidate::setName(std::string &&pName) noexcept
 
 const int32_t &Candidate::getValueOfOrd() const noexcept
 {
-    const static int32_t defaultValue = int32_t();
+    static const int32_t defaultValue = int32_t();
     if(ord_)
         return *ord_;
     return defaultValue;
